@@ -1,0 +1,206 @@
+---
+title: "Download Player stats"
+author: "LZ"
+date: "26 4 2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Download data from FBref
+
+The goal of this project is to profile defenders of the English Championship
+through clustering. We will perform clustering on player stats of Season 22/23 scraped from 
+FBref (<https://fbref.com/en/comps/10/stats/Championship-Stats>) with the `worldfootballR`
+package (<https://github.com/JaseZiv/worldfootballR>) in the Markdown document named
+'Clustering Defenders'. 
+But first, we download the 'standard', 'passing', 'defending' and 'miscellaneous' player data 
+from FBref and merge them into one large tibble.
+
+```{r, message = FALSE}
+library(tidyverse)
+library(worldfootballR)
+```
+
+```{r}
+NL22_standard <- fb_league_stats(
+  country = "ENG",
+  gender = "M",
+  season_end_year = 2023,
+  tier = "2nd",
+  non_dom_league_url = NA,
+  stat_type = "standard",
+  team_or_player = "player", 
+  rate = purrr::rate_backoff(max_times = 5)
+)
+```
+
+Here are some explanations for the measured variables: 
+* `cmp` Passes completed
+* `att` passes attempted
+* `Cmp_percentage_*` pass completion percentage, 
+ divided in Short (5-15 yards), Medium (15 - 30), Long (> 30 yards) and Total
+* `totdist` total pass dist
+* `prgdist` : Total distance, in yards, that completed
+   passes have traveled towards the opponent's goal.
+   Note: Passes away from opponent's goal are counted as zero progressive yards.
+* `ast` assist
+* `xAG` xG which follow a pass that assists a shot
+* `xA` expected assists likelihood completed pass becomes a goal assisst given pass type,
+* phase of play, location, distance
+* `A-xAG` assists minus xga
+* `KP` (key passes; pass leading to shot)
+* `pass_final_third` passes into final third
+* `PP`A passes into penalty area
+* `CrsPA` crosses into penalty area
+* `PrgP` progressive Completed passes that move the ball towards the opponent's
+ goal line at least 10 yards from its furthest point in the last six passes,
+ or any completed pass into the penalty area.
+ Excludes passes from the defending 40% of the pitch
+
+```{r}
+NL22_pass <- fb_league_stats(
+  country = "ENG",
+  gender = "M",
+  season_end_year = 2023,
+  tier = "2nd",
+  non_dom_league_url = NA,
+  stat_type = "passing",
+  team_or_player = "player",
+  rate = purrr::rate_backoff(max_times = 5)
+)
+
+```
+
+We transform all metrics that are not percentages to per 90 metrics:
+```{r}
+names_per_90 <- colnames(NL22_pass)[9:31]
+names_per_90 <- names_per_90[ - contains("percent", vars = names_per_90)]
+names_per_90
+
+NL22_pass_per90 <- NL22_pass %>% mutate_at(names_per_90, ~ {.x/Mins_Per_90})
+```
+
+Now we download the defending stats, which have measures on the following variables:
+* `Tkl` Number of players tackled
+* `Tklw` Number of tackles which resulted in ball win
+* `Def 3rd` Tackles in defensive 3rd
+* `Mid 3rd` -- in mid 3rd
+* `att 3rd` --  in attacking third
+* `TkL_Challenges` Number of dribblers tackled
+* `Att_Challenges` number of unsuccessful challenges + number of dribblers tackled
+* `Tkl_percent_Challenges` percentage of dribblers tackled
+* `Lost_Challenges` Number of unsuccessful attempts to challenge a dribbler
+* `Blocks_Blocks`  Number of blocks
+* `Sh_Blocks` number of shots blocked
+* `Pass_Blocks` number of passes blocked
+* `Int` Interceptions
+* `Tkl+Int` Number of tackled plus interceptions
+* `Clr` Clearances
+* `Err` Errors (resulting in Shot from opponent)
+
+```{r}
+NL22_def <- fb_league_stats(
+  country = "ENG",
+  gender = "M",
+  season_end_year = 2023,
+  tier = "2nd",
+  non_dom_league_url = NA,
+  stat_type = "defense",
+  team_or_player = "player"
+)
+
+names_per_90 <- colnames(NL22_def)[9:24]
+names_per_90 <- names_per_90[ - contains("percent", vars = names_per_90)]
+names_per_90
+
+NL22_def_per90 <- NL22_def %>% mutate_at(names_per_90, ~ { .x/Mins_Per_90})
+```
+
+For possession, we have measures on
+
+* `Touches_*` Number of touches, computed for several areas (defensive Penalty area, 
+ Defensive 3rd, ...)
+* `Take-On` : forcing a duel
+* `Carries_Carries` Number of carries
+* `TotDist_Carries` Total distance of carries in yards
+* `PrgDist_Carries` Total distance in yards twrds opponents goal
+* `PrgC_Carries` Number of progressive carries
+* `Final_third_Carries` Carries into final third
+* `CPA_Carries` carries into penalty area
+* `Mis_Carries` # Failed carries
+* `Dis_Carries` # Dispossessed carries
+* `Rec_Receiving` # passes received (successfully)
+* `PrgR_Receiving` # Progressive Passes received
+
+```{r}
+
+NL22_poss <- fb_league_stats(
+  country = "ENG",
+  gender = "M",
+  season_end_year = 2023,
+  tier = "2nd",
+  non_dom_league_url = NA,
+  stat_type = "possession",
+  team_or_player = "player"
+)
+names_per_90 <- colnames(NL22_poss)[9:30]
+names_per_90 <- names_per_90[ - contains("percent", vars = names_per_90)]
+names_per_90
+
+NL22_poss_per90 <- NL22_poss %>% mutate_at(names_per_90, ~ { .x/Mins_Per_90})
+```
+
+
+* `CrdY` yellow cards
+* `CrdR` red cards
+* `2CrdY` 2nd yellow card
+* `Fls` Fouls committed
+* `Fld` Fouls drawn
+* `Off` Offsided
+* `Crs` Crosses
+* `Int` Interceptions
+* `TklW` tackles won
+* `PKwon` Penalty Kicks won
+* `PKcon` Penalty Kicks conceded
+* `OG` Own goals
+* `Recov` Ball recoveries
+* `Won_Aerial Duels` won aerial duels
+* `Lost_Aerial Duels` lost aerial duels
+
+```{r}
+NL22_misc <- fb_league_stats(
+  country = "ENG",
+  gender = "M",
+  season_end_year = 2023,
+  tier = "2nd",
+  non_dom_league_url = NA,
+  stat_type = "misc",
+  team_or_player = "player"
+)
+
+names_per_90 <- colnames(NL22_misc)[9:24]
+names_per_90 <- names_per_90[ - contains("percent", vars = names_per_90)]
+names_per_90
+
+NL22_misc_per90 <- NL22_misc %>% mutate_at(names_per_90, ~ { .x/Mins_Per_90})
+
+```
+Now we join the tibbles (some columns are duplicated, so they are left out during the join).
+
+```{r}
+NL22_all <- NL22_standard %>% select(-c(url, Matches, CrdY, CrdR)) %>%
+  left_join(NL22_def_per90 %>% select(-c(Age, url, Matches)), by = c("Rk", "Player", "Nation", "Pos", "Squad", "Born")) %>%
+  left_join(NL22_pass_per90 %>%  select(-c(Age, url, Matches, Mins_Per_90, Ast)), by = c("Rk", "Player", "Nation", "Pos", "Squad", "Born")) %>%
+  left_join(NL22_poss_per90 %>%  select(-c(Age, url, Matches, Mins_Per_90)), by = c("Rk", "Player", "Nation", "Pos", "Squad", "Born")) %>%
+  left_join(NL22_misc_per90 %>% select(-c(Int, Age, url, Matches, Born, Mins_Per_90)), by = c("Rk", "Player", "Nation", "Pos", "Squad"))
+```
+
+We save the resulting tibble to a file named 'Championship22_23_playerStats'.
+```{r}
+save(NL22_pass, file = paste0(getwd(), "/data/Championship22_23_playerStats.RData"))
+```
+
+
+
