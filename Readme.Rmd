@@ -1,11 +1,10 @@
 ---
-title: "Clustering Defenders"
+title: "Readme"
 author: "LZ"
 date: "26 4 2023"
-output:
-  pdf_document: default
-  html_document: default
+output: html_document
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
