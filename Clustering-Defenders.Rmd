@@ -1,8 +1,10 @@
 ---
-title: "Readme"
+title: "Clustering Defenders"
 author: "LZ"
 date: "26 4 2023"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -130,12 +132,15 @@ NL22_defenders  <- NL22_defenders %>%
 We have metrics of central importance, then some additional ones, and some measuring 
 player aggressiveness:
 ```{r}
-metrics_central <- c("Blocks_Blocks", "Sh_Blocks", "Clr", "Int", "Won_Aerial Duels", "TacklesWonPercent",
-                   "Tkl_percent_Challenges", "Cmp_percent_Total","Lost_Challenges", "Err", "Mins_Per_90")
+metrics_central <- c("Blocks_Blocks", "Sh_Blocks", "Clr", "Int",
+                     "Won_Aerial Duels", "TacklesWonPercent",
+                   "Tkl_percent_Challenges", "Cmp_percent_Total",
+                   "Lost_Challenges", "Err", "Mins_Per_90")
 
-metrics_add <- c("Carries_Carries", "PrgC_Carries", "Mis_Carries", "Dis_Carries", "PrgDist_Carries",
-                 "CrsPA", "Cmp_percent_Long", "Cmp_percent_Short", "Cmp_percent_Medium",
-                 "PKcon", "OG")
+metrics_add <- c("Carries_Carries", "PrgC_Carries", "Mis_Carries", 
+                 "Dis_Carries", "PrgDist_Carries",
+                 "CrsPA", "Cmp_percent_Long", "Cmp_percent_Short", 
+                 "Cmp_percent_Medium", "PKcon", "OG")
 
 metrics_agg <- c("Fls",  "Tkl_Tackles", "CardsPer90", "FoulsPerTackle")
 
@@ -145,7 +150,8 @@ metrics <- c(metrics_central, metrics_add, metrics_agg)
 ### Cluster analysis
 
 Now we are ready for the cluster analysis. 
-Our new tibble of centre backs only consists of the chosen metrics and the Player's name and minutes played:
+Our new tibble of centre backs only consists of the chosen metrics and the
+Player's name and minutes played:
 
 ```{r}
 cbs_ana <- NL22_defenders[ , c("Player", "Mins_Per_90", metrics)]
@@ -153,7 +159,8 @@ cbs_ana
 cbs_ana <- cbs_ana[complete.cases(cbs_ana), ]
 ```
 
-Since these are still many metrics, we perform a cluster analysis in order to reduce dimension.
+Since these are still many metrics, we perform a cluster analysis in order to 
+reduce dimension.
 ```{r}
 pca <- prcomp(cbs_ana[ , metrics], scale. = TRUE)
 summary(pca)
@@ -210,7 +217,8 @@ df_pca <- df_pca %>% left_join(tib_clusters)
 
 df_pca %>% pivot_wider(names_from = Var2, values_from = value) %>%
   GGally::ggpairs(columns = 3:7, aes(colour = as.factor(cluster)), upper = "blank",
-                  diag = list(continuous = GGally::wrap("densityDiag", alpha = 0.5)), legend = c(1,1))+
+                  diag = list(continuous = GGally::wrap("densityDiag", alpha = 0.5)), 
+                  legend = c(1,1))+
   labs(fill = "Cluster")+
   theme_bw() + theme(text = element_text(size = 20), legend.position = "bottom")
 ```
@@ -253,7 +261,8 @@ knitr::kable(loadings[, c(n_pcs+1, 1:n_pcs)])
   + contarily, high scores on PC1 are related to rather bad positioning and
   + having to tackle/foul more, less safe playing style
 * second PC 
- + has moderately high negative loads on Blocks in total, shots blocked, clearances, intercepts and aerial duels,
+ + has moderately high negative loads on Blocks in total, shots blocked, clearances,
+ intercepts and aerial duels,
  + high positive loads on pass completion percentage (all distance categories),
  carries, progressive carries,
  progressive distance carried
