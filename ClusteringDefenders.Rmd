@@ -1,5 +1,5 @@
 ---
-title: "Clustering Defenders"
+title: "ClusteringDefenders"
 author: "LZ"
 date: "26 4 2023"
 output:
@@ -54,7 +54,8 @@ the weights are chosen as minutes played within teams, divided by minutes played
 These are the players that appear multiple times in the data, with a selection of variables.
 
 ```{r}
-NL22_defenders %>% filter(Player %in% NL22_defenders[duplicated(NL22_defenders$Player),  ]$Player) %>% 
+NL22_defenders %>% 
+  filter(Player %in% NL22_defenders[duplicated(NL22_defenders$Player),  ]$Player) %>% 
   select(Player, Squad, Mins_Per_90, Tkl_Tackles, TklW_Tackles)
 ```
 Now ´the new value for Rarmani Edmonds-Greens `Tkl_Tackles` statistics should be
@@ -281,7 +282,7 @@ knitr::kable(loadings[, c(n_pcs+1, 1:n_pcs)])
 
 
 Groupwise boxplots of original stats
-```{r, fig.dim = c(12, 10), out.width="80%", fig.align='center'}
+```{r, fig.dim = c(12, 10), out.width="100%", fig.align='center'}
 cbs_ana <- cbs_ana %>% select(-"Mins_Per_90") %>% left_join(tib_clusters)
 
 cbs_ana %>% pivot_longer(cols = Blocks_Blocks:FoulsPerTackle) %>%
@@ -305,3 +306,4 @@ cluster_list <- df_pca %>% select(Player, cluster) %>% unique() %>%
 knitr::kable(cluster_list)
 
 ```
+
