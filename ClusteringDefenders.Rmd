@@ -59,7 +59,8 @@ NL22_defenders %>%
   select(Player, Squad, Mins_Per_90, Tkl_Tackles, TklW_Tackles)
 ```
 Now ´the new value for Rarmani Edmonds-Greens `Tkl_Tackles` statistics should be
-$ (2.5926 * 2.7 + 8.5* 1.8824)/(2.7 + 8.5)$. The following function does that.
+\[(2.5926 \cdot 2.7 + 8.5 \cdot 1.8824)/(2.7 + 8.5).\] 
+The following function does that.
 ```{r}
 weighted_avg_duplicates <- function(df) {
 
