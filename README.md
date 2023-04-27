@@ -18,3 +18,6 @@ To sum up, great defending skills, but fewer ball playing qualities are found in
 great defending skills and great ball playing qualities can be found in froup 2, 
 group 1 is rather balanced, and group 3 has low pass completion rates andn rather poor defending skills,
 tries to carry the ball a lot. 
+
+
+## To do: try to adjust some of the defending metrics for ball possession.
