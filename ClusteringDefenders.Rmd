@@ -191,16 +191,16 @@ clust_pcs <- hclust(dist_pcs, method = "ward.D")
 ```
 
 Now we plot the dendrogram for a first time.
-```{r, fig.dim = c(10, 10)}
-plot(clust_pcs, main = "Ward Linkage")
+```{r, fig.dim = c(20, 8)}
+plot(clust_pcs, main = "Ward Linkage", hang = -1, cex = 0.6)
 ```
 
 It seems reasonable to cut the dendrogram such that we obtain 4 clusters.
-```{r, fig.dim=c(12, 8)}
+```{r, fig.dim=c(20, 8)}
 cut_cl <- cutree(clust_pcs, k = 4)
 clust_pcs <- as.dendrogram(clust_pcs)
 dend_cl <- dendextend::color_branches(clust_pcs, k = 4)
-plot(dend_cl, main = "Ward Linkage")
+plot(dend_cl, main = "Ward Linkage", cex = 0.6)
 ```
 
 We count the number of players per cluster:
@@ -241,10 +241,10 @@ knitr::kable(loadings[, c(n_pcs+1, 1:n_pcs)])
 ## Interpretation
 
 * first PC separates all clusters quite well:
- + clearest separation between clusters 1,2  and 2,3; 1,3; 3,4;
- + some overlap of clusters 1 and 4, but rather due to large variation; 
- modus is well separated; 
- + cluster 2 and 4 overlap most
+  + clearest separation between clusters 1,2  and 2,3; 1,3; 3,4;
+  + some overlap of clusters 1 and 4, but rather due to large variation; 
+   modus is well separated; 
+  + cluster 2 and 4 overlap most
 * second PC separates cluster 4 from the rest.
 * PC3 doesn't separate too well between the groups
 
@@ -252,7 +252,7 @@ knitr::kable(loadings[, c(n_pcs+1, 1:n_pcs)])
   +  high negative loads on Shots blocked, Clearances, Won Aerial Duels,
  completed pass percentage (also long + medium completed pass perc.)
   + moderately negative load on carries
-  + high positive loads on lost challenges, Progressive carries, Mis_carriesm
+  + high positive loads on lost challenges, Progressive carries, failed carries,
  dispossessed carries, Crosses into penalty area, Number of tackles
   + moderately positive load on Fouls
   + $\Rightarrow$ high negative scores on PC1 can be interpreted as having good positioning
@@ -263,9 +263,9 @@ knitr::kable(loadings[, c(n_pcs+1, 1:n_pcs)])
   + contarily, high scores on PC1 are related to rather bad positioning and
   + having to tackle/foul more, less safe playing style
 * second PC 
- + has moderately high negative loads on Blocks in total, shots blocked, clearances,
+  + has moderately high negative loads on Blocks in total, shots blocked, clearances,
  intercepts and aerial duels,
- + high positive loads on pass completion percentage (all distance categories),
+  + high positive loads on pass completion percentage (all distance categories),
  carries, progressive carries,
  progressive distance carried
   + balances classic defending skills and ball playing qualities,
@@ -278,8 +278,8 @@ knitr::kable(loadings[, c(n_pcs+1, 1:n_pcs)])
   experience/routine 
   + positive loadings on Tkl_percent_challenges, Mins_Per_90,
  Total Tackles
- + negative loadings on conceded penalties, Fouls, CardsPer90, FoulsPerTackle
- +  having low scores on PC3 is rather unpleasant.
+  + negative loadings on conceded penalties, Fouls, CardsPer90, FoulsPerTackle
+  +  having low scores on PC3 is rather unpleasant.
 
 
 Groupwise boxplots of original stats
@@ -291,7 +291,7 @@ cbs_ana %>% pivot_longer(cols = Blocks_Blocks:FoulsPerTackle) %>%
   geom_boxplot()+
   facet_wrap(~name, scales = "free")+
   labs(fill = "Cluster Label:", x = "")+
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom", text = element_text(size = 16))
 ```
 
 
@@ -304,7 +304,7 @@ cluster_list <- df_pca %>% select(Player, cluster) %>% unique() %>%
   mutate(playerlist = purrr::map_chr(data, ~ paste(unlist(.x), collapse = ", "))) %>%
   select(-data) %>% ungroup()
 
-knitr::kable(cluster_list)
+knitr::kable(cluster_list, col.names = c("Group", "Player"), align = c("l", "c"))
 
 ```
 
