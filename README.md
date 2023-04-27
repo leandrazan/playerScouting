@@ -12,7 +12,7 @@ Four groups are found, that characterise the players into
  (Group 3, also Group 1, but less clear as group 3)
  - defenders that have good ball playing qualities (high pass completion rates) and make progression through carries (group 2)
  vs more classical defenders (strong at defending, group 4), group 1 and 3 are balanced.
-- some 'intellient' tackling skills in group 1 (few fouls per tackle, while tackling frequently, few cards per 90)
+- some 'intelligent' tackling skills in group 1 (few fouls per tackle, while tackling frequently, few cards per 90)
 
 To sum up, great defending skills, but fewer ball playing qualities are found in group 4, 
 great defending skills and great ball playing qualities can be found in froup 2, 
