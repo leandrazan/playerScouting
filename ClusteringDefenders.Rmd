@@ -170,51 +170,46 @@ summary(pca)
 
 We see that the first 10 Principal Components explain approx 80\% of variance.
 
+We assemble a tibble with the principal component scores of the first 10 PCs for 
+all players.
 ```{r}
 rownames(pca$x) <- cbs_ana$Player
 n_pcs <- 10
 df_pca <- as_tibble(reshape2::melt(pca$x[, 1:n_pcs]))
-df_pca <- df_pca %>% rename("Player" = Var1) %>% left_join(cbs_ana %>% select(Player))
+df_pca <- df_pca %>% rename("Player" = Var1) %>% 
+  left_join(cbs_ana %>% select(Player), by = "Player")
 df_pca
 ```
+### K-Means clustering
 
-### hierarchical clustering
-
-We use Ward's method (other methods yielded way worse separations).
-```{r}
-
-#dist_pcs <- dist(pca$x[ , 1:8], method = "max")
-
-dist_pcs <- dist(pca$x[ , 1:n_pcs])
-
-clust_pcs <- hclust(dist_pcs, method = "ward.D")
+Since here, we have numeric metrics only and we want to find several clusters with 
+similar player types, represented by an 'average' playing style, it makes sense to 
+use $k$-means clustering. 
+First, we look at the gap statistic and the elbow plot to find a suitable number of 
+clusters.
+```{r, fig.dim = c(4, 3), fig.align='center'}
+set.seed(1)
+factoextra::fviz_nbclust(pca$x[, 1:n_pcs], kmeans, method = "wss")
+factoextra::fviz_nbclust(pca$x[, 1:n_pcs], kmeans, method = "gap_stat")
 ```
 
-Now we plot the dendrogram for a first time.
-```{r, fig.dim = c(20, 8)}
-plot(clust_pcs, main = "Ward Linkage", hang = -1, cex = 0.6)
-```
 
-It seems reasonable to cut the dendrogram such that we obtain 4 clusters.
-```{r, fig.dim=c(20, 8)}
-cut_cl <- cutree(clust_pcs, k = 4)
-clust_pcs <- as.dendrogram(clust_pcs)
-dend_cl <- dendextend::color_branches(clust_pcs, k = 4)
-plot(dend_cl, main = "Ward Linkage", cex = 0.6)
-```
-
-We count the number of players per cluster:
+The gap statistic suggests that $k = 3$ is the optimal number of clusters, so we'll 
+perform the clustering with 3 clusters next.
 
 ```{r}
-table(cut_cl)
-tib_clusters <- tibble(cluster = cut_cl) %>% mutate(Player = names(cut_cl))
+set.seed(2)
+km_clust <- kmeans(pca$x[, 1:n_pcs], centers = 3, iter.max = 50, nstart = 20)
+table(km_clust$cluster)
 ```
+ There are 80 members in cluster 1, 92 in cluster 2 and 53 in cluster 3. 
+ 
+We can make pairwise scatterplots of the principal component (PC) scores, with the 
+colour indicating cluster membership. The distributions of PC scores within the clusters
+are plotted on the diagonal.
 
-Join the principal component scores with the obtained cluster labels, and 
-plot the densities of principal component scores within clusters, as well as pair-wise
-plots of the principal component scores.
-
-```{r, fig.dim=c(10,10), out.width="80%", fig.align='center'}
+```{r, fig.dim = c(12, 10), out.width="100%", fig.align='center'}
+tib_clusters <- tibble(cluster = km_clust$cluster) %>% mutate(Player = names(km_clust$cluster))
 df_pca <- df_pca %>% left_join(tib_clusters)
 
 df_pca %>% pivot_wider(names_from = Var2, values_from = value) %>%
@@ -224,13 +219,14 @@ df_pca %>% pivot_wider(names_from = Var2, values_from = value) %>%
   labs(fill = "Cluster")+
   theme_bw() + theme(text = element_text(size = 20), legend.position = "bottom")
 ```
-
 The distributions of principal component scores are well separated between clusters 
-(at least for the first two principal components). We can now try to interprete 
-what the scores on the differend PCs actually mean. For this, we look at the 
+(at least for the first two principal components). We can now try to interpret
+what the clusters actually represent. 
+For this, we take a look at the cluster centers and at the 
 matrix of loadings.
 
 ```{r}
+clust_centers <- km_clust$centers
 loadings <- as_tibble(pca$rotation[ , 1:n_pcs]) %>%
   mutate_all( ~ { ifelse(abs(.x)> 0.1, round(.x,2),  "")}) %>%
   mutate(metric = rownames(pca$rotation))
@@ -240,13 +236,7 @@ knitr::kable(loadings[, c(n_pcs+1, 1:n_pcs)])
 
 ## Interpretation
 
-* first PC separates all clusters quite well:
-  + clearest separation between clusters 1,2  and 2,3; 1,3; 3,4;
-  + some overlap of clusters 1 and 4, but rather due to large variation; 
-   modus is well separated; 
-  + cluster 2 and 4 overlap most
-* second PC separates cluster 4 from the rest.
-* PC3 doesn't separate too well between the groups
+### Principal Component Scores
 
 * first PC
   +  high negative loads on Shots blocked, Clearances, Won Aerial Duels,
@@ -261,7 +251,8 @@ knitr::kable(loadings[, c(n_pcs+1, 1:n_pcs)])
  or dispossessed carries)
   + confident and safe playing style
   + contarily, high scores on PC1 are related to rather bad positioning and
-  + having to tackle/foul more, less safe playing style
+  + having to tackle/foul more, less safe playing style, taking more risks (also 
+  for making progression)
 * second PC 
   + has moderately high negative loads on Blocks in total, shots blocked, clearances,
  intercepts and aerial duels,
@@ -271,8 +262,6 @@ knitr::kable(loadings[, c(n_pcs+1, 1:n_pcs)])
   + balances classic defending skills and ball playing qualities,
   + high scores on PC2 related to great ball playing qualities,
   + low scores to great defending skills and less good ball playing ability.
-  + Clusters 1 and 3 are quite balanced, cluster 4 with negative scores, cluster 2
-    with positive scores
 * third PC
   + loadings suggest that PC3 measures 'intelligent'/good tackling skills or
   experience/routine 
@@ -280,6 +269,35 @@ knitr::kable(loadings[, c(n_pcs+1, 1:n_pcs)])
  Total Tackles
   + negative loadings on conceded penalties, Fouls, CardsPer90, FoulsPerTackle
   +  having low scores on PC3 is rather unpleasant.
+
+### Cluster Interpretation
+
+```{r}
+clust_centers[ , 1:3]
+```
+
+
+* first PC: separates cluster 2 and 3 quite well, cluster 1 overlaps more with 
+cluster 3
+  + Cluster 3 (low scores): good positioning and defending skills, safe playing style
+  + Cluster 1 (balanced, skewed to low scores): also  good positioning and defending skills, 
+    safe playing style
+  + Cluster 2 (high scores): tendency towards more tackles and fouls, 
+   more (perhaps unsuccessful) carries, likes to cross into Penalty Area 
+* second PC separates cluster 1 and 3 quite well, cluster two overlaps mostly with cluster 3
+  + Cluster 1 (low scores): great defending skills, fewer ball playing ability
+  + Cluster 2 (moderately high scores): good ball playing/carrying abilities
+  + Cluster 3 (high scores): great ball playing/carrying abilities
+  
+Overall, Cluster 1 is more of a 'classical' defender with great defending skills, 
+good positioning and a safe playing style, without making too many progression with the 
+ball or taking a lot of risk. 
+Cluster 2 contains defenders that have good ball playing/carrying abilities but also 
+tend to foul and tackle a lot, tendency to crosses into Penalty Area (in total, more 
+willing to take a risk).
+Cluster three contains defenders that have a great balance between classical defending 
+skills and ball playing abilities, without taking too many risks. The have great
+passing accuracy and positioning. 
 
 
 Groupwise boxplots of original stats
@@ -302,9 +320,13 @@ cluster_list <- df_pca %>% select(Player, cluster) %>% unique() %>%
   group_by(cluster) %>%
   nest()%>%
   mutate(playerlist = purrr::map_chr(data, ~ paste(unlist(.x), collapse = ", "))) %>%
-  select(-data) %>% ungroup()
+  select(-data) %>% ungroup() %>% 
+  arrange(cluster)
 
 knitr::kable(cluster_list, col.names = c("Group", "Player"), align = c("l", "c"))
 
 ```
+
+
+
 
