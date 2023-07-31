@@ -210,7 +210,7 @@ are plotted on the diagonal.
 
 ```{r, fig.dim = c(12, 10), out.width="100%", fig.align='center'}
 tib_clusters <- tibble(cluster = km_clust$cluster) %>% mutate(Player = names(km_clust$cluster))
-df_pca <- df_pca %>% left_join(tib_clusters)
+df_pca <- df_pca %>% left_join(tib_clusters, by = "Player")
 
 df_pca %>% pivot_wider(names_from = Var2, values_from = value) %>%
   GGally::ggpairs(columns = 3:7, aes(colour = as.factor(cluster)), upper = "blank",
@@ -223,10 +223,20 @@ The distributions of principal component scores are well separated between clust
 (at least for the first two principal components). We can now try to interpret
 what the clusters actually represent. 
 For this, we take a look at the cluster centers and at the 
-matrix of loadings.
+matrix of loadings, as well as clusterwise boxplots of principal component scores.
+
+```{r, fig.dim = c(6, 6), fig.align='center'}
+df_pca %>% 
+    ggplot(aes( x = Var2, y = value, fill = as.factor(cluster)))+
+    facet_wrap(~ Var2, scales = "free")+
+    geom_boxplot()+
+    labs(fill = "Cluster Label:", x = "")+
+    theme(legend.position = "bottom", text = element_text(size = 16))
+```    
 
 ```{r}
 clust_centers <- km_clust$centers
+clust_centers
 loadings <- as_tibble(pca$rotation[ , 1:n_pcs]) %>%
   mutate_all( ~ { ifelse(abs(.x)> 0.1, round(.x,2),  "")}) %>%
   mutate(metric = rownames(pca$rotation))
@@ -302,7 +312,7 @@ passing accuracy and positioning.
 
 Groupwise boxplots of original stats
 ```{r, fig.dim = c(12, 10), out.width="100%", fig.align='center'}
-cbs_ana <- cbs_ana %>% select(-"Mins_Per_90") %>% left_join(tib_clusters)
+cbs_ana <- cbs_ana %>% select(-"Mins_Per_90") %>% left_join(tib_clusters, by = "Player")
 
 cbs_ana %>% pivot_longer(cols = Blocks_Blocks:FoulsPerTackle) %>%
   ggplot(aes( x = name, y = value, fill = as.factor(cluster)))+
