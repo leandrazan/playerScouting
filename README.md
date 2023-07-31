@@ -1,6 +1,8 @@
 # playerScouting
 
-In the pdf 'ClusteringDefenders', defenders that played in the English Championship season 22/23 are profiled through clustering.
+In the pdf 'ClusteringDefenders' 
+(or here: https://htmlpreview.github.io/?https://github.com/leandrazan/playerScouting/blob/main/ClusteringDefenders.html) 
+defenders that played in the English Championship season 22/23 are profiled through clustering.
 
 Three groups are found, that characterise the players into 
 
