@@ -3,8 +3,8 @@ title: "ClusteringDefenders"
 author: "LZ"
 date: "26 4 2023"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -161,7 +161,7 @@ cbs_ana
 cbs_ana <- cbs_ana[complete.cases(cbs_ana), ]
 ```
 
-Since these are still many metrics, we perform a cluster analysis in order to 
+Since these are still many metrics, we perform a principal component analysis in order to 
 reduce dimension.
 ```{r}
 pca <- prcomp(cbs_ana[ , metrics], scale. = TRUE)

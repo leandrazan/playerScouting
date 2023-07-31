@@ -327,7 +327,7 @@ cbs_ana</code></pre>
 ## #   Cmp_percent_Short &lt;dbl&gt;, Cmp_percent_Medium &lt;dbl&gt;, PKcon &lt;dbl&gt;, OG &lt;dbl&gt;,
 ## #   Fls &lt;dbl&gt;, Tkl_Tackles &lt;dbl&gt;, CardsPer90 &lt;dbl&gt;, FoulsPerTackle &lt;dbl&gt;</code></pre>
 <pre class="r"><code>cbs_ana &lt;- cbs_ana[complete.cases(cbs_ana), ]</code></pre>
-<p>Since these are still many metrics, we perform a cluster analysis in order to reduce dimension.</p>
+<p>Since these are still many metrics, we perform a principal component analysis in order to reduce dimension.</p>
 <pre class="r"><code>pca &lt;- prcomp(cbs_ana[ , metrics], scale. = TRUE)
 summary(pca)</code></pre>
 <pre><code>## Importance of components:
